@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:hacks.elevenlabs.io)",
+      "Bash(npm -v)"
+    ]
+  }
+}
