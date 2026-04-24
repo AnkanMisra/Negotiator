@@ -7,11 +7,18 @@ export { applyServerGate };
 
 export const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// Groq model — configurable via env. Defaults to the 8b model because it has
-// 5x the daily token budget (500k TPD vs 100k TPD for 70b) and is ~2x faster,
-// and quality is plenty good for Viktor's short tight dialogue. Override to
-// `llama-3.3-70b-versatile` if you want higher character fidelity.
-const GROQ_MODEL = process.env.GROQ_MODEL ?? "llama-3.1-8b-instant";
+// Groq model — configurable via env. Defaults to Llama 4 Scout 17B MoE
+// because it's the most generous on the free tier:
+//   - 30K TPM (5x the 6K ceiling on 8B / 70B)
+//   - 500K TPD (same as 8B, 5x the 70B cap)
+//   - Newer architecture + more params than Llama 3.1 8B (better Viktor
+//     quality — he's a character, bigger helps)
+//
+// Sources: console.groq.com/docs/rate-limits (verified 2026-04-24).
+// Overrides: set GROQ_MODEL=llama-3.3-70b-versatile for max character fidelity
+// (100K TPD), or GROQ_MODEL=qwen/qwen3-32b for big-model dialogue on 6K TPM.
+const GROQ_MODEL =
+  process.env.GROQ_MODEL ?? "meta-llama/llama-4-scout-17b-16e-instruct";
 
 const SECRET_FLAVOR: Record<Secret, string> = {
   contraband: "they carry undeclared valuables hidden in their luggage",
