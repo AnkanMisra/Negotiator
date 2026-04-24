@@ -13,12 +13,12 @@ flowchart TB
 
     subgraph vercel[Vercel — Free forever]
         FE[Next.js frontend<br/>+ /api/negotiate<br/>+ /api/voice<br/>+ /public/music/*]
-        FE -.reads env.-> SEC1[GROQ_API_KEY]
+        FE -.reads env.-> SEC1[LLM_API_KEY]
         FE -.reads env.-> SEC2[ELEVENLABS_API_KEY]
     end
 
     DEV -->|vercel --prod| FE
-    FE -->|HTTPS| GROQ[(Groq API)]
+    FE -->|HTTPS| LLM[(LLM API<br/>Cerebras default)]
     FE -->|HTTPS stream| EL[(ElevenLabs API)]
     CLIENT[Browser] -->|HTTPS| FE
 
@@ -37,7 +37,7 @@ flowchart TB
 
     subgraph cf[Cloudflare Workers — Free 100k req/day]
         BE[Rust Worker<br/>negotiator.YOUR-SUBDOMAIN.workers.dev]
-        SEC1[Secret: GROQ_API_KEY]
+        SEC1[Secret: LLM_API_KEY]
         SEC2[Secret: ELEVENLABS_API_KEY]
         BE -.reads.-> SEC1
         BE -.reads.-> SEC2
@@ -47,7 +47,7 @@ flowchart TB
     DEV -->|wrangler deploy| BE
 
     FE -->|NEXT_PUBLIC_API_URL<br/>HTTPS fetch| BE
-    BE -->|HTTPS| GROQ[(Groq API)]
+    BE -->|HTTPS| LLM[(LLM API<br/>Cerebras default)]
     BE -->|HTTPS stream| EL[(ElevenLabs API)]
 
     style vercel fill:#111,stroke:#000,color:#fff
@@ -59,7 +59,7 @@ flowchart TB
 ```
 Vercel (frontend + TS API routes) : $0/month
 Cloudflare Workers (future)        : $0/month (100k req/day free tier)
-Groq                               : $0 (free tier, 12k TPM)
+LLM (Cerebras default)             : $0 (free tier, 60K TPM / 1M TPD)
 ElevenLabs                         : user's existing paid plan
 DNS / domain                       : $0 (*.vercel.app + *.workers.dev)
 Music asset                        : $0 (CC BY 3.0, Kevin MacLeod)
@@ -86,7 +86,7 @@ rustup target add wasm32-unknown-unknown
 
 API keys:
 
-- **Groq** — https://console.groq.com/keys (free tier)
+- **LLM (default Cerebras)** — https://cloud.cerebras.ai (free, 1M tokens/day, no credit card). Override via `LLM_BASE_URL` + `LLM_MODEL` to use Groq / OpenAI / OpenRouter / etc.
 - **ElevenLabs** — https://elevenlabs.io/app/settings/api-keys (user's paid plan)
 
 ## Current deploy (TS backend ships)
@@ -100,11 +100,15 @@ cd /path/to/game
 vercel link
 
 # Set env vars — pasted when prompted, never shown again
-vercel env add GROQ_API_KEY production
+vercel env add LLM_API_KEY production
 vercel env add ELEVENLABS_API_KEY production
 
+# Optional: override the default LLM provider (Cerebras + Qwen 3 235B)
+# vercel env add LLM_BASE_URL production
+# vercel env add LLM_MODEL production
+
 # Also add for preview deploys if you want the preview URL to work
-vercel env add GROQ_API_KEY preview
+vercel env add LLM_API_KEY preview
 vercel env add ELEVENLABS_API_KEY preview
 ```
 
@@ -180,9 +184,12 @@ cd backend
 bunx wrangler login
 
 # Set secrets — pasted at the prompt
-bunx wrangler secret put GROQ_API_KEY
+bunx wrangler secret put LLM_API_KEY
 bunx wrangler secret put ELEVENLABS_API_KEY
 bunx wrangler secret put ELEVENLABS_VOICE_ID   # optional override
+# Optional: swap LLM provider from the Cerebras default
+# bunx wrangler secret put LLM_BASE_URL
+# bunx wrangler secret put LLM_MODEL
 ```
 
 First `wrangler deploy` creates the Worker and prints its URL:
@@ -218,7 +225,7 @@ Then redeploy the frontend.
 |---|---|---|
 | Vercel build fails on `backend/` folder | `.vercelignore` missing or wrong | Ensure `backend/`, `playtest/`, `scripts/` are listed |
 | `/api/voice` returns 500, log shows `invalid_api_key` | `ELEVENLABS_API_KEY` is blank / expired / wrong | Update via `vercel env add`, redeploy. Voice fallback (F5) keeps game playable in the meantime |
-| `/api/negotiate` returns 429 | Groq TPM rate limit (12k/min free tier) | Expected during heavy playtests. Client's fallback path preserves UI |
+| `/api/negotiate` returns 429 | LLM provider rate limit (TPM or daily TPD). Amber banner appears in the UI. | Expected during heavy playtests. Cerebras Qwen 3 235B default gives 60K TPM / 1M TPD — enough for normal play. Override model via `LLM_MODEL` if you need something bigger or smaller. |
 | Audio doesn't autoplay | Browser autoplay policy — music requires a user gesture | Wired correctly: music starts on "Approach the Gate" click |
 | Music file 404 | `.vercelignore` or Vercel build missing `public/music/` | Check the file exists in the deployed build, confirm Vercel is serving `/music/ossuary-5-rest.mp3` |
 | Portrait SVG shows NaN warnings | Malformed response payload poisoning state | Fixed — client now checks `res.ok` + shape-validates before dispatching |

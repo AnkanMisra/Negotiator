@@ -28,20 +28,20 @@ flowchart TB
     end
 
     subgraph ext[External APIs]
-        GROQ[Groq<br/>Llama 3.3 70B Versatile]
+        LLM[OpenAI-compatible LLM<br/>Cerebras · Qwen 3 235B default<br/>LLM_BASE_URL / LLM_MODEL override]
         ELEVEN[ElevenLabs<br/>Flash v2.5 TTS]
     end
 
     UI -->|fetch HTML + JS + music| CDN
     UI -->|POST /negotiate| N
     UI -->|POST /voice| V
-    N -->|chat.completions<br/>two tool calls| GROQ
+    N -->|chat.completions<br/>two tool calls| LLM
     V -->|textToSpeech.stream| ELEVEN
     ELEVEN -.->|MP3 bytes| V
 
     N -. future .-> RT
     V -. future .-> RT
-    RT -. future .-> GROQ
+    RT -. future .-> LLM
     RT -. future .-> ELEVEN
 ```
 
@@ -65,7 +65,7 @@ sequenceDiagram
     participant GV as useGuardVoice
     participant BM as useBackgroundMusic
     participant N as /api/negotiate
-    participant G as Groq
+    participant G as LLM (Cerebras/Qwen3-235B)
     participant V as /api/voice
     participant EL as ElevenLabs
 
@@ -121,7 +121,7 @@ flowchart TB
 
     subgraph turn[Every turn]
         IN[Player input]
-        IN --> EX[extractClaims<br/>lib/llm.ts · Groq tool call · temp 0]
+        IN --> EX[extractClaims<br/>lib/llm.ts · LLM tool call · temp 0]
         EX -->|new claims| MRG[mergeClaims<br/>by field, dedup, trim]
         ST -->|prior claims| MRG
         MRG --> NST[(next state.claims)]
@@ -142,7 +142,7 @@ flowchart TB
 
 **Design intent:** Viktor shouldn't *guess* that you're lying — he should *know*, because he's carrying structured evidence. The passport is ground truth the player can see. The claim store is a running list of what the player has explicitly told him. When the current input contradicts either, the system prompt instructs Viktor to call out the specific contradiction and apply a suspicion delta.
 
-**Critical design choice:** the two Groq calls run **concurrently** via `Promise.all` in `app/api/negotiate/route.ts`. Serial would add ~150-300 ms to the critical path. Parallel keeps turn latency inside one round-trip budget. Extraction failures are swallowed (extractor returns `[]`), so a broken extract never breaks the main reply path.
+**Critical design choice:** the two LLM calls run **concurrently** via `Promise.all` in `app/api/negotiate/route.ts`. Serial would add ~150-300 ms to the critical path. Parallel keeps turn latency inside one round-trip budget. Extraction failures are swallowed (extractor returns `[]`), so a broken extract never breaks the main reply path.
 
 **Stateless server preserved:** the server holds no game state. Passport + claims live on the client reducer; client sends both every turn.
 
@@ -216,7 +216,7 @@ stateDiagram-v2
 | `components/EndCard.tsx` | Browser | CROSSED / ARRESTED overlay with replay | — |
 | `lib/gameState.ts` | Browser (pure) | Reducer: deltas, clamp, win/lose, `mergeClaims` | 28 |
 | `lib/gate.ts` | Pure TS / Worker (ported) | `applyServerGate` — strip invalid end flags | 11 |
-| `lib/llm.ts` | Next.js server (temp) | Groq client + Viktor prompt + `extractClaims` | — (gate extracted) |
+| `lib/llm.ts` | Next.js server (temp) | OpenAI-compatible client (defaults Cerebras / Qwen 3 235B) + Viktor prompt + `extractClaims` | — (gate extracted) |
 | `lib/elevenlabs.ts` | Next.js server (temp) | Voice settings per mood + streaming call | — |
 | `lib/audio.ts` | Browser | `useGuardVoice` — streaming fetch + AnalyserNode + **graceful fallback** | — (DOM-dependent) |
 | `lib/music.ts` | Browser | `useBackgroundMusic` — looping `HTMLAudioElement` + smooth RAF fades + duck/mute | — (DOM-dependent) |
@@ -277,7 +277,7 @@ Claim = {
 **Server-side gate (`applyServerGate`):**
 - `end="pass"` requires **BOTH** `trust + trustDelta ≥ 80` AND `exchange ≥ 3`.
 - `end="arrest"` requires `suspicion + suspicionDelta ≥ 100`.
-- `end="none"` is a schema sentinel (Groq strict-validates tool args) and silently stripped.
+- `end="none"` is a schema sentinel (many LLM providers strict-validate tool args and reject optional enum fields) and silently stripped.
 - All violations strip the field rather than rewriting it. Pure function.
 
 **Error envelopes** (important for client robustness — the reducer must not receive undefined deltas):
@@ -334,7 +334,7 @@ Every component was picked for exactly one reason. Cuts are documented so a futu
 |---|---|---|
 | Next.js 16 on Vercel | Native Next platform; free tier; one-command deploy | Astro, Remix (less common for hackathons) |
 | Rust on Cloudflare Workers (future) | First-party `workers-rs`; **zero cold-start** V8 isolates; 100k req/day free; secrets as `wrangler secret put` | Fly.io (no free tier since Q4 2024); Render (30-60 s Rust cold starts); AWS Lambda (stateless + DynamoDB needed); Oracle Cloud (instance reclaim risk) |
-| Groq Llama 3.3 70B | Free tier; ~300 ms replies; OpenAI-compatible tool calling | Claude API (user has claude.ai Max, not API); Gemini (slower); OpenAI (paid) |
+| Cerebras + Qwen 3 235B (default) | Most generous free tier in 2026 (**1M TPD, 60K TPM**), OpenAI-compatible drop-in, 235B MoE is ~14× the params of Llama 4 Scout 17B so Viktor's character is sharper and contradiction-catching is more reliable. Code uses `openai` SDK with `baseURL` override, so swapping providers is a one-env-var change. | Groq (smaller free ceiling), Gemini 2.5 Pro (100 RPD kills playability), Claude API (no free API tier), OpenAI GPT-4o-mini (paid) |
 | Two-LLM pipeline (extract + reply) | Extraction needs cold precision (temp=0, tiny schema); reply needs warm character (temp=0.85). Running concurrent keeps latency flat. | Single-call with combined schema (pollutes Viktor's output quality) |
 | ElevenLabs Flash v2.5 | Fastest ElevenLabs model (~500 ms first byte); mood→voice-settings mapping | Turbo v2.5 (slower); Multilingual v2 (slower still); v3 (deferred to when credits arrive) |
 | Kevin MacLeod "Ossuary 5 - Rest" | CC BY 3.0 royalty-free, dark ambient drone, 2:26 loops cleanly, sits under dialogue | ElevenLabs Music generation (blocked on credits) — planned swap later |
@@ -381,7 +381,7 @@ A permanent list so new agents don't re-propose these.
 | Minimum exchanges for pass | `applyServerGate` | 3 |
 | LLM temperature (reply) | `lib/llm.ts` | 0.85 |
 | LLM temperature (claim extract) | `lib/llm.ts` | 0 |
-| LLM max_tokens (reply) | same | 250 |
+| LLM max_tokens (reply) | same | 180 |
 | LLM max_tokens (claim extract) | same | 120 |
 | Default voice ID | `lib/elevenlabs.ts` | `pNInz6obpgDQGcFmaJgB` (Adam) — will be A/B'd |
 | TTS model | same | `eleven_flash_v2_5` |

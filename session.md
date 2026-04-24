@@ -5,7 +5,7 @@
 ## TL;DR in 5 lines
 
 - **Hackathon:** [hacks.elevenlabs.io/hackathons/5](https://hacks.elevenlabs.io/hackathons/5). Zed × ElevenLabs. **Deadline: ~6 days from 2026-04-24.**
-- **What we're shipping:** *The Negotiator* — one-screen narrative game. Player types at border guard Viktor Marek; Groq shapes his reply; a second Groq call extracts structured claims from the input; Viktor's prompt carries both the passport (ground truth) and the running claim list so he can call out contradictions by name; ElevenLabs streams the voice.
+- **What we're shipping:** *The Negotiator* — one-screen narrative game. Player types at border guard Viktor Marek; an OpenAI-compatible LLM (Cerebras + Qwen 3 235B by default) shapes his reply; a second LLM call extracts structured claims from the input; Viktor's prompt carries both the passport (ground truth) and the running claim list so he can call out contradictions by name; ElevenLabs streams the voice.
 - **The differentiator:** consistency-under-pressure gameplay. The passport + claim-memory system is what lifts this above every other ElevenLabs submission. Papers, Please insight: *interrogation is compelling when you can get caught in a lie*.
 - **Judging reality:** the hackathon guide says *spend half your time on the video, not the code*. Video ≈ 50% of score. +50 per social post × 4 platforms = +200 bonus. **Ship the video, not a Rust port.**
 - **Strategic pivot (still in force):** Rust migration (R2-R7) is **DEFERRED until after submission**. TypeScript backend routes (`app/api/*`) ship live.
@@ -45,10 +45,10 @@
 - **Global styles** ([app/globals.css](app/globals.css)): dark CRT, reactive rain (base + heavy layer), lightning overlay (appears at suspicion ≥ 70), flicker keyframes.
 
 ### Backend (TypeScript — currently ships)
-- `/api/negotiate` ([app/api/negotiate/route.ts](app/api/negotiate/route.ts)) — runs `extractClaims()` + `negotiate()` **concurrently** via `Promise.all`, returns `NegotiateReply + updatedClaims`. Error envelopes on 429/4xx/5xx. Fallback payload on catastrophic Groq errors.
+- `/api/negotiate` ([app/api/negotiate/route.ts](app/api/negotiate/route.ts)) — runs `extractClaims()` + `negotiate()` **concurrently** via `Promise.all`, returns `NegotiateReply + updatedClaims`. Error envelopes on 429/4xx/5xx. Fallback payload on catastrophic LLM errors.
 - `/api/voice` ([app/api/voice/route.ts](app/api/voice/route.ts)) — ElevenLabs Flash v2.5 streaming passthrough.
 - **Viktor prompt** ([lib/llm.ts](lib/llm.ts)): `GROUND TRUTH` block (passport name/origin/purpose) + `PLAYER CLAIMS SO FAR` block (from reducer) + `INTERROGATION RULES` block (name contradictions specifically, never invent). Strict `end="pass" FORBIDDEN unless` language, `"none"` sentinel.
-- **`extractClaims`** (same file): cheap Groq call, temp 0, tool-forced `{claims: [{field, value}]}`, max 120 tokens. Skips extraction for short inputs or obvious questions.
+- **`extractClaims`** (same file): cheap LLM call, temp 0, tool-forced `{claims: [{field, value}]}`, max 120 tokens. Skips extraction for short inputs or obvious questions.
 - **Server-side gate** ([lib/gate.ts](lib/gate.ts)): `applyServerGate` — strips `end=pass` unless trust+Δ≥80 ∧ exchange≥3; strips `end=arrest` unless suspicion+Δ≥100. LLM compliance not required.
 - **ElevenLabs voice settings per mood** ([lib/elevenlabs.ts](lib/elevenlabs.ts)): calm/suspicious/angry/amused maps.
 
@@ -92,7 +92,7 @@ Master plan is in [docs/SUBMISSION.md](docs/SUBMISSION.md). Below is the same wo
 
 | ID | Task | Est. | Blocker |
 |---|---|---|---|
-| **S1** | `vercel --prod` — link project, add `GROQ_API_KEY` + `ELEVENLABS_API_KEY` env vars, ship. Get a live URL for judges. | 20 m | None |
+| **S1** | `vercel --prod` — link project, add `LLM_API_KEY` + `ELEVENLABS_API_KEY` env vars, ship. Get a live URL for judges. | 20 m | None |
 | **W0f** | Cover image (1080×1920 screenshot of game mid-turn, save to `assets/cover.png`) | 30 m | None |
 | F4 | Typewriter keystroke SFX on `onKeyDown` in `PlayerInput` | 30 m | None — Web Audio click |
 | F6 | Mobile 390px layout pass | 30 m | None — verify all sections fit |
@@ -154,7 +154,7 @@ From [CLAUDE.md](CLAUDE.md):
 - **Audio is the core mechanic.** Never weaken or bypass it.
 - **Passport + claim memory is load-bearing.** Gameplay differentiator — do not remove.
 - **Viktor never invents contradictions.** Only flags real mismatches against passport or prior claims.
-- **Secrets stay server-side.** `GROQ_API_KEY` / `ELEVENLABS_API_KEY` live in `.env.local` / Vercel env / Worker secrets.
+- **Secrets stay server-side.** `LLM_API_KEY` / `ELEVENLABS_API_KEY` live in `.env.local` / Vercel env / Worker secrets.
 - **Cost caps:** player input ≤ 180, guard reply ≤ 220, history ≤ 6 turns, claim extraction ≤ 120 tokens.
 - **Viktor never breaks character** — no "as an AI", no stage directions.
 - **Single-viewport layout.** Game must fit without window scrolling (both UX + vertical video capture).
@@ -182,7 +182,7 @@ bun scripts/playtest.ts
 
 # deploy (TS backend ships)
 vercel link                               # one-time
-vercel env add GROQ_API_KEY production    # one-time
+vercel env add LLM_API_KEY production     # one-time
 vercel env add ELEVENLABS_API_KEY production
 vercel --prod
 ```
@@ -248,6 +248,6 @@ Feasible. Main risk is ElevenLabs credit arrival time.
 - Background music is live (Kevin MacLeod track). Plan for Day 1 is to generate a custom ElevenLabs Music track and A/B against it; keep MacLeod as fallback.
 - Scroll jank killed; input alignment rebuilt with terminal feel; all meters/passport/portrait sized to fit single-viewport vertical capture.
 - The 429 → NaN cascade bug is fixed. Any future protocol changes should preserve the `res.ok` + shape-validation checks in `onSubmit`.
-- `scripts/playtest.ts` should be re-run once Groq TPM cools down, to re-verify calibration targets (sincere ~40% win, absurd <10% win, hostile ≥30% arrest). The passport mechanic may shift these targets — worth measuring.
+- `scripts/playtest.ts` should be re-run once LLM rate limits cool down, to re-verify calibration targets (sincere ~40% win, absurd <10% win, hostile ≥30% arrest). The passport mechanic may shift these targets — worth measuring.
 - ElevenLabs credits blocker is external; nothing code-side to do until key is valid.
 - Today's date as of this handoff: **2026-04-24**.

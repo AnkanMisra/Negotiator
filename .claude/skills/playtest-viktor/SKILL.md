@@ -32,7 +32,7 @@ If emotional wins 3/3 in turn 1, `end=pass` is firing before the 3-exchange gate
 1. **Preflight.**
    - Confirm the backend URL. Default: `http://localhost:3000/api/negotiate` (TS dev route). After R5, it's `http://localhost:8787/negotiate` (local Worker) or the deployed Worker URL. Respect `BACKEND_URL` env var if set.
    - Hit `curl -sf ${BACKEND_URL} >/dev/null` (or the origin) to confirm it's up.
-   - Confirm `GROQ_API_KEY` is present — without it the endpoint returns a `fallback: true` reply and results are meaningless. For the TS route: `grep -q '^GROQ_API_KEY=.\+' .env.local`. For the Worker: `bunx wrangler secret list`.
+   - Confirm `LLM_API_KEY` is present — without it the endpoint returns a `fallback: true` reply and results are meaningless. For the TS route: `grep -q '^LLM_API_KEY=.\+' .env.local`. For the Worker: `bunx wrangler secret list`.
 
 2. **Archetypes** — five canonical player styles, three turns each:
 
@@ -62,8 +62,8 @@ If emotional wins 3/3 in turn 1, `end=pass` is firing before the 3-exchange gate
 
 4. **Handle rate limiting and fallbacks.**
    - On HTTP 429: respect `retry-after` header, sleep, retry. Cap at 5 attempts.
-   - On `fallback: true` in the response: sleep 3s and retry; cap at 3 attempts. The fallback means either Groq errored or a key is missing; empirical data is invalid until a real reply comes.
-   - Serialize playthroughs (parallelism 1) or cap at 2 concurrent — Groq free tier is ~12k TPM and parallel bursts hit the wall. Fix latency by pacing, not by parallelism.
+   - On `fallback: true` in the response: sleep 3s and retry; cap at 3 attempts. The fallback means either the LLM errored or a key is missing; empirical data is invalid until a real reply comes.
+   - Serialize playthroughs (parallelism 1) or cap at 2 concurrent — Cerebras free tier is 60K TPM / 30 RPM and parallel bursts still hit the RPM wall. Fix latency by pacing, not by parallelism.
 
 5. **Report** — terse markdown to stdout:
    - Win / loss / timeout count per archetype
@@ -82,7 +82,7 @@ Delete the script after use unless it's the canonical `scripts/playtest.ts` — 
 
 ## Cost and time budget
 
-- ~45 Groq requests total (15 × 3 turns). Each ~1000 tokens with trimmed prompt. Well under daily quota.
+- ~45 LLM requests total (15 × 3 turns). Each ~1000 tokens with trimmed prompt. Well under daily quota (Cerebras 1M TPD default).
 - Wall time: ~60s sequential, more with retries. If it stretches past 120s, something is rate-limited — investigate, don't just wait.
 
 ## Related docs

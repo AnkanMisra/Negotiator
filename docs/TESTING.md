@@ -55,7 +55,7 @@ What does NOT belong in a unit test for this codebase:
 
 - React components — visual review is faster and catches more
 - Framer Motion animations — no meaningful invariant to assert
-- Calls to Groq / ElevenLabs — mocking the external API makes the test tautological; real integration happens via `scripts/playtest.ts`
+- Calls to the LLM / ElevenLabs — mocking the external API makes the test tautological; real integration happens via `scripts/playtest.ts`
 - The `useGuardVoice` hook or `useBackgroundMusic` hook — requires `AudioContext` + `HTMLAudioElement`; belongs in E2E territory
 - CSS keyframes — rendered output is the test
 - Portrait SVG — visual diff tools are overkill here
@@ -154,7 +154,7 @@ Avoid adding dependencies for testing. `serde_json::{json, to_value, to_string, 
 | Framer Motion animations | No meaningful invariant; maintenance cost >> value |
 | `useGuardVoice` amplitude | Requires AudioContext; belongs in E2E (Playwright) if we ever want it |
 | `useBackgroundMusic` volume fades | Requires HTMLAudioElement + RAF in browser; same story |
-| Groq calls | Mocking returns our own prompt back; tautological |
+| LLM calls | Mocking returns our own prompt back; tautological |
 | `extractClaims` output quality | It's a live LLM call; we cover the **wire shape** in `/api/negotiate` (returns `Claim[]`), not the LLM's semantic judgment. Use `scripts/playtest.ts` for live validation. |
 | ElevenLabs calls | Same reason; live testing via `scripts/playtest.ts` or `/voice-ab` skill |
 | `app/page.tsx` orchestration | End-to-end territory; covered by manual playtest |

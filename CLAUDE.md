@@ -25,7 +25,7 @@ One-screen narrative voice game for the [Zed × ElevenLabs hackathon](https://ha
 
 - **Audio is the core mechanic.** Do not weaken or bypass it.
 - **Claim memory is load-bearing.** The passport + claim-extraction pipeline IS the gameplay differentiator. Don't remove it or weaken the interrogation prompt blocks.
-- **Secrets stay server-side.** `GROQ_API_KEY` / `ELEVENLABS_API_KEY` live in `.env.local` for now, Cloudflare Worker secrets later. Client only ever sees `NEXT_PUBLIC_API_URL` (post-R6).
+- **Secrets stay server-side.** `LLM_API_KEY` / `ELEVENLABS_API_KEY` live in `.env.local` for now, Cloudflare Worker secrets later. Client only ever sees `NEXT_PUBLIC_API_URL` (post-R6).
 - **Cost caps are load-bearing:** player input ≤ 180 chars, guard reply ≤ 220 chars, history ≤ 6 turns sent to LLM, claim extraction ≤ 120 tokens.
 - **Viktor never breaks character** — no "as an AI", no stage directions, no meta commentary.
 - **Never invent contradictions.** The interrogation rule block in `lib/llm.ts` explicitly says so — Viktor only calls out real mismatches grounded in the passport or prior claims.
@@ -87,14 +87,14 @@ cargo clippy -- -D warnings                    # lint
 bunx wrangler dev                              # local Worker at :8787 (post-R2)
 bunx wrangler deploy                           # deploy
 bunx wrangler tail                             # live logs
-bunx wrangler secret put GROQ_API_KEY          # set secret
+bunx wrangler secret put LLM_API_KEY            # set secret
 ```
 
 ### Deploy (current — TS backend ships)
 ```bash
 cd /path/to/game
 vercel link                                    # one-time
-vercel env add GROQ_API_KEY production
+vercel env add LLM_API_KEY production
 vercel env add ELEVENLABS_API_KEY production
 vercel --prod
 ```
@@ -107,7 +107,7 @@ sequenceDiagram
     participant UI as Next.js UI
     participant R as Reducer
     participant N as /api/negotiate
-    participant G as Groq
+    participant G as LLM (Cerebras/Qwen3)
     participant V as /api/voice
     participant E as ElevenLabs
 
@@ -188,7 +188,7 @@ backend/
 └─ src/
    ├─ lib.rs                     # #[event(fetch)] + Router
    ├─ handlers.rs                # /negotiate, /voice — 501 stubs (real at R4)
-   ├─ llm.rs                     # TO ADD at R2 — Viktor prompt + Groq client + tool schema + extractClaims
+   ├─ llm.rs                     # TO ADD at R2 — Viktor prompt + OpenAI-compatible LLM client (Cerebras default) + tool schema + extractClaims
    ├─ tts.rs                     # TO ADD at R3 — ElevenLabs client + mood→voice settings
    ├─ types.rs                   # Mood, Secret, Turn, Passport, Claim, NegotiateReply + 17 tests
    └─ error.rs                   # thiserror enum + Into<Response>
@@ -266,7 +266,7 @@ curl -X POST http://localhost:3000/api/negotiate \
   }'
 ```
 
-Returns `NegotiateReply + updatedClaims`. On Groq errors: server returns the fallback payload `{reply, mood:"suspicious", trustDelta:0, suspicionDelta:5, voiceStyle:"suspicious", fallback:true}`. On Groq 429: server returns 429 with `retry-after` header and `{error:"rate_limited"}`.
+Returns `NegotiateReply + updatedClaims`. On LLM errors: server returns the fallback payload `{reply, mood:"suspicious", trustDelta:0, suspicionDelta:5, voiceStyle:"suspicious", fallback:true}`. On 429: server returns 429 with `retry-after` header and `{error:"rate_limited"}`.
 
 Post-R4 (Rust Worker local):
 ```bash
@@ -288,7 +288,7 @@ Project-local skills in `.claude/skills/`, invokable as `/<name>`:
 - Do **not** add Docker or multi-stage builds. There are no containers in this project.
 - Do **not** add `ts-rs`, `governor`, `moka`, `tower-http` middleware, or cargo workspaces unless explicitly asked. They are cut.
 - Do **not** remove or weaken the passport / claim-memory system — it's the gameplay differentiator.
-- Do **not** mock Groq or ElevenLabs in tests that actually run them. Use real integration against a running Worker / dev server.
+- Do **not** mock the LLM or ElevenLabs in tests that actually run them. Use real integration against a running Worker / dev server.
 - Do **not** edit `app/api/*` routes after R6 has happened — they should be deleted.
 - Do **not** dispatch `GUARD_REPLY` without validating the payload shape — NaN cascades through the entire UI.
 - Do **not** throw from `useGuardVoice.speak()` or `useBackgroundMusic.start()` — callers expect graceful resolution.

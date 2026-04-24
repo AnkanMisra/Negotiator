@@ -95,7 +95,7 @@ Gameplay differentiator — shipped end-to-end.
 | ID | Scope | Status | Notes |
 |---|---|---|---|
 | **P1** | Passport UI | ✅ done | `components/PassportCard.tsx` — aged paper, stamped purpose, MRZ line, photo silhouette. Generator in `lib/passport.ts` (Slavic name + origin pools, secret-biased purpose). Stored on state.passport. |
-| **P2** | Claim extraction pipeline | ✅ done | `extractClaims(text)` in `lib/llm.ts` — cheap Groq call, temp 0, tool-forced `{claims: [{field, value}]}`. `/api/negotiate` runs extraction + Viktor reply **concurrently** via `Promise.all`. `mergeClaims()` in `lib/gameState.ts` de-dupes by field. |
+| **P2** | Claim extraction pipeline | ✅ done | `extractClaims(text)` in `lib/llm.ts` — cheap LLM call, temp 0, tool-forced `{claims: [{field, value}]}`. `/api/negotiate` runs extraction + Viktor reply **concurrently** via `Promise.all`. `mergeClaims()` in `lib/gameState.ts` de-dupes by field. |
 | **P3** | Viktor interrogation prompt | ✅ done | New `GROUND TRUTH` + `PLAYER CLAIMS SO FAR` + `INTERROGATION RULES` blocks injected every turn. Deltas: +10-15 suspicion on passport contradiction, +15-20 on self-contradiction, +5-8 trust on match. Never invents contradictions. |
 
 ### Viktor avatar
@@ -130,7 +130,7 @@ Per strategic pivot: judges don't evaluate backend language; every Rust hour is 
 
 | ID | Scope | Status | Est. | Blocker |
 |---|---|---|---|---|
-| S1 | `vercel --prod` frontend deploy | ⬜ | 10 min | Needs `GROQ_API_KEY` + `ELEVENLABS_API_KEY` set via `vercel env add` |
+| S1 | `vercel --prod` frontend deploy | ⬜ | 10 min | Needs `LLM_API_KEY` + `ELEVENLABS_API_KEY` set via `vercel env add` |
 | S2 | Record 45-60 s vertical gameplay video + Zed B-roll + friend reaction | ⬜ | 2-3 h | **ElevenLabs credits** (current key is invalid — 401) |
 | S3 | Post X + LinkedIn + Instagram + TikTok (`@zeddotdev @elevenlabsio #ElevenHacks`) | ⬜ | 2 h | S2 done |
 | S4 | Submit on `hacks.elevenlabs.io/hackathons/5` | ⬜ | 15 min | S3 done |
@@ -214,7 +214,7 @@ Buckets marked ✅ are fully complete. Weighted sum ≈ **72 %** done toward a s
 | Blocker | What's blocked | Self-resolves? |
 |---|---|---|
 | Invalid / zero-credit ElevenLabs API key | Live voice, S2 (video), `voice-ab` skill, v3 audio tags experimentation | Manual — user action |
-| Groq TPM cooldown (~10 min between heavy sweeps) | `scripts/playtest.ts` full runs | Yes — automatic |
+| LLM TPM cooldown (~10 min on Cerebras free tier between heavy sweeps) | `scripts/playtest.ts` full runs | Yes — automatic |
 | (None structural) | Everything else | — |
 
 Nothing structural blocks S1 (Vercel deploy). Run it any time.

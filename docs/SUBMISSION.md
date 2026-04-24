@@ -84,7 +84,7 @@ All Day 0 polish has already shipped (see Done list above). What's left for toda
 
 | Task | Est. | Notes |
 |---|---|---|
-| **S1 `vercel --prod`** | 20 m | Link project, add `GROQ_API_KEY` + `ELEVENLABS_API_KEY` env vars, ship. Get a live URL for judges. |
+| **S1 `vercel --prod`** | 20 m | Link project, add `LLM_API_KEY` + `ELEVENLABS_API_KEY` env vars, ship. Get a live URL for judges. |
 | **W0f Cover image** | 30 m | Take a 1080×1920 screenshot of the game mid-turn (passport visible, meters mid-range, Viktor mid-reply) OR use a Claude Design poster. Save to `assets/cover.png`. |
 
 ### Day 1 — credits arrive (~2026-04-25)
@@ -145,7 +145,7 @@ timeline
     28-40 s : Tension peak<br/>thunder SFX, lightning flash, rain intensifies<br/>Viktor's mood shifts angry<br/>voice audibly colder<br/>cheek flush on portrait
     40-48 s : Friend reaction cutaway<br/>"wait WHAT"
     48-54 s : Resolution<br/>stamp DENIED + cell door SFX<br/>OR stamp APPROVED + gate buzz<br/>end card
-    54-58 s : Zed B-roll<br/>VO: "Built in Zed. ElevenLabs voice + SFX. Groq reasoning."
+    54-58 s : Zed B-roll<br/>VO: "Built in Zed. ElevenLabs voice + SFX. Cerebras + Qwen 3 235B reasoning."
     58-60 s : Title card<br/>@zeddotdev @elevenlabsio #ElevenHacks
 ```
 
@@ -190,7 +190,7 @@ You're handed a passport at game start — Name, Origin, Purpose. Viktor (the gu
 Trust ≥ 80 after 3 exchanges → cross. Suspicion ≥ 100 → arrested.
 
 Built the whole thing in Zed with:
-· Groq (Llama 3.3 70B) for Viktor's character + a concurrent claim extractor
+· Cerebras Inference (Qwen 3 235B) for Viktor's character + a concurrent claim extractor
 · ElevenLabs Flash v2.5 for streaming TTS
 · ElevenLabs Music / SFX for the atmosphere
 · Next.js on Vercel
@@ -237,7 +237,7 @@ When filling out the submission on `hacks.elevenlabs.io`:
 - [ ] Cover image (1080×1920)
 - [ ] Video (uploaded or linked)
 - [ ] Description (see below)
-- [ ] Tech stack: Next.js, Groq, ElevenLabs Flash v2.5 TTS + Music + SFX, Rust (scaffold), Zed
+- [ ] Tech stack: Next.js, Cerebras + Qwen 3 235B (OpenAI-compatible, swappable), ElevenLabs Flash v2.5 TTS + Music + SFX, Rust (scaffold), Zed
 
 ### Description (for the form)
 ```
@@ -245,9 +245,9 @@ The Negotiator is a one-scene narrative game. You're a traveler at a rainy midni
 
 You're given a passport — Name, Origin, Purpose. Viktor can see it too. You type; he responds. Every reply is streamed from ElevenLabs Flash v2.5, voice-tuned to his mood.
 
-What makes it a game: a second Groq call runs in parallel each turn, extracting structured claims from what you said. Viktor's system prompt carries both the passport's ground truth AND the running list of your claims. When you contradict yourself — or your papers — he doesn't guess. He calls it out: "You said Anna. Now you say Ana. Which is it?" Trust climbs when you stay consistent. Suspicion climbs when you don't. Cross at trust ≥ 80 after 3 exchanges. Fail to convince him and suspicion hits 100 — you're arrested.
+What makes it a game: a second LLM call runs in parallel each turn, extracting structured claims from what you said. Viktor's system prompt carries both the passport's ground truth AND the running list of your claims. When you contradict yourself — or your papers — he doesn't guess. He calls it out: "You said Anna. Now you say Ana. Which is it?" Trust climbs when you stay consistent. Suspicion climbs when you don't. Cross at trust ≥ 80 after 3 exchanges. Fail to convince him and suspicion hits 100 — you're arrested.
 
-Built in Zed. Groq (Llama 3.3 70B) drives Viktor's character AND the claim extractor via forced-schema tool calls. ElevenLabs Flash v2.5 streams the voice; amplitude drives mouth animation in real time. Mood changes voice settings (stability, style) so he literally sounds different depending on how you're doing. Rain intensifies and lightning flashes as suspicion climbs. Background music ducks under his voice.
+Built in Zed. Cerebras Inference serving Qwen 3 235B drives Viktor's character AND the claim extractor via forced-schema tool calls (OpenAI-compatible, ~450 tokens/sec, 1M tokens/day free). ElevenLabs Flash v2.5 streams the voice; amplitude drives mouth animation in real time. Mood changes voice settings (stability, style) so he literally sounds different depending on how you're doing. Rain intensifies and lightning flashes as suspicion climbs. Background music ducks under his voice.
 
 56 tests across TypeScript reducer + gate + claim-merge logic + Rust type contracts. Zero-cost stack on Vercel + Cloudflare Workers.
 ```

@@ -4,7 +4,7 @@ Rust backend for The Negotiator, running on Cloudflare Workers via [`workers-rs`
 
 ## Status
 
-**R1 scaffold.** Routes defined, handlers return 501. Real implementations come in R2 (`llm.rs`, Groq) and R3 (`tts.rs`, ElevenLabs).
+**R1 scaffold.** Routes defined, handlers return 501. Real implementations come in R2 (`llm.rs`, OpenAI-compatible LLM — Cerebras default) and R3 (`tts.rs`, ElevenLabs).
 
 ## Develop
 
@@ -19,9 +19,17 @@ Tests compile and run on the host (macOS) target, not wasm — the `worker` crat
 ## Secrets (one-time)
 
 ```bash
-bunx wrangler secret put GROQ_API_KEY
+bunx wrangler secret put LLM_API_KEY
 bunx wrangler secret put ELEVENLABS_API_KEY
 bunx wrangler secret put ELEVENLABS_VOICE_ID   # optional
+```
+
+`LLM_BASE_URL` and `LLM_MODEL` are config, not secrets — if you want to override the Cerebras + Qwen 3 235B defaults, put them in `wrangler.toml` under `[vars]` so the deployed setup stays reviewable in git:
+
+```toml
+[vars]
+LLM_BASE_URL = "https://api.cerebras.ai/v1"
+LLM_MODEL    = "qwen-3-235b-a22b-instruct-2507"
 ```
 
 ## Deploy

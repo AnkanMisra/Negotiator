@@ -56,7 +56,6 @@ jobs:
         env:
           LLM_API_KEY: ci-dummy-key
           ELEVENLABS_API_KEY: ci-dummy-key
-          GROQ_API_KEY: ci-dummy-key
         run: bun run build
 
   backend:
