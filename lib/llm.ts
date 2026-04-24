@@ -21,15 +21,20 @@ export { applyServerGate };
  *   LLM_MODEL=meta-llama/llama-4-scout-17b-16e-instruct
  *   LLM_API_KEY=<groq key>
  */
-const LLM_BASE_URL = process.env.LLM_BASE_URL ?? "https://api.cerebras.ai/v1";
-const LLM_MODEL = process.env.LLM_MODEL ?? "qwen-3-235b-a22b-instruct-2507";
+// Use || not ??: an env var present-but-empty (e.g. `LLM_BASE_URL=` in
+// .env.local after copying .env.example) would otherwise slip past nullish
+// coalescing, and an empty baseURL silently routes to OpenAI's default
+// endpoint — our Cerebras key then 401s against the wrong API with no
+// hint about the misconfiguration.
+const LLM_BASE_URL = process.env.LLM_BASE_URL || "https://api.cerebras.ai/v1";
+const LLM_MODEL = process.env.LLM_MODEL || "qwen-3-235b-a22b-instruct-2507";
 
 // The OpenAI SDK throws at construction time when apiKey is undefined,
 // which breaks Next.js's build-time route data collection. Fall back to a
 // placeholder so construction always succeeds; calls will 401 at runtime
 // if the key is actually missing — same UX as the error banner catches.
 export const llm = new OpenAI({
-  apiKey: process.env.LLM_API_KEY ?? "missing-llm-api-key",
+  apiKey: process.env.LLM_API_KEY || "missing-llm-api-key",
   baseURL: LLM_BASE_URL,
 });
 
