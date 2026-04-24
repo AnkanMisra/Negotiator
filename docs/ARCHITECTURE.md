@@ -381,7 +381,7 @@ A permanent list so new agents don't re-propose these.
 | Minimum exchanges for pass | `applyServerGate` | 3 |
 | LLM temperature (reply) | `lib/llm.ts` | 0.85 |
 | LLM temperature (claim extract) | `lib/llm.ts` | 0 |
-| LLM max_tokens (reply) | same | 250 |
+| LLM max_tokens (reply) | same | 180 |
 | LLM max_tokens (claim extract) | same | 120 |
 | Default voice ID | `lib/elevenlabs.ts` | `pNInz6obpgDQGcFmaJgB` (Adam) — will be A/B'd |
 | TTS model | same | `eleven_flash_v2_5` |

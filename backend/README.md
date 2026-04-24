@@ -22,9 +22,14 @@ Tests compile and run on the host (macOS) target, not wasm — the `worker` crat
 bunx wrangler secret put LLM_API_KEY
 bunx wrangler secret put ELEVENLABS_API_KEY
 bunx wrangler secret put ELEVENLABS_VOICE_ID   # optional
-# Optional: override the default LLM endpoint/model from Cerebras + Qwen 3 235B
-# bunx wrangler secret put LLM_BASE_URL
-# bunx wrangler secret put LLM_MODEL
+```
+
+`LLM_BASE_URL` and `LLM_MODEL` are config, not secrets — if you want to override the Cerebras + Qwen 3 235B defaults, put them in `wrangler.toml` under `[vars]` so the deployed setup stays reviewable in git:
+
+```toml
+[vars]
+LLM_BASE_URL = "https://api.cerebras.ai/v1"
+LLM_MODEL    = "qwen-3-235b-a22b-instruct-2507"
 ```
 
 ## Deploy
