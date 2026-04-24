@@ -1,0 +1,122 @@
+name: CI
+
+# Runs on every PR to main and every push to main. Two parallel jobs —
+# frontend (Bun, TypeScript, Next.js) and backend (Rust, workers-rs). Both
+# must pass for the `CI passed` summary job to succeed, which is what you'd
+# require in branch protection.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel in-flight runs when a new commit lands on the same branch/PR so
+# we don't waste Actions minutes on stale commits.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend (TypeScript)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.13
+
+      - name: Cache Bun install
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Unit tests
+        run: bun run test
+
+      - name: Production build
+        # Next.js API routes use `new OpenAI({ apiKey: ... })` at module
+        # scope, which the SDK rejects when apiKey is undefined. We fall back
+        # to a placeholder in code, but set a dummy env here too so any
+        # future provider with similar strictness doesn't surprise us.
+        env:
+          LLM_API_KEY: ci-dummy-key
+          ELEVENLABS_API_KEY: ci-dummy-key
+          GROQ_API_KEY: ci-dummy-key
+        run: bun run build
+
+  backend:
+    name: Backend (Rust)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+          # wasm32 target is required by `workers-rs` for actual deploys.
+          # `cargo check --target wasm32-unknown-unknown` verifies the crate
+          # stays WASM-compatible while we continue to add features.
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy (host target, warnings allowed on deferred stubs)
+        # Handlers are 501 stubs pending R2-R6; dead-code warnings are
+        # expected on types the stubs don't yet consume. Tighten to
+        # `-D warnings` once the real handlers land.
+        run: cargo clippy --locked --all-targets
+
+      - name: Unit tests (native)
+        run: cargo test --locked --all-targets
+
+      - name: Check wasm32-unknown-unknown target
+        # The whole point of this crate is to compile to WASM for Cloudflare
+        # Workers. If a dep or edit breaks wasm compat, catch it here.
+        run: cargo check --locked --target wasm32-unknown-unknown
+
+  ci-passed:
+    name: CI passed
+    # Runs after both matrix jobs so branch protection can require a single
+    # status check instead of all of them individually.
+    if: always()
+    needs: [frontend, backend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any required job failed
+        if: |
+          needs.frontend.result != 'success' ||
+          needs.backend.result   != 'success'
+        run: |
+          echo "One or more required jobs failed:"
+          echo "  frontend: ${{ needs.frontend.result }}"
+          echo "  backend:  ${{ needs.backend.result }}"
+          exit 1
+      - name: Success
+        run: echo "All CI jobs passed."
