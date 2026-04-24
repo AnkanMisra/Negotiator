@@ -19,9 +19,12 @@ Tests compile and run on the host (macOS) target, not wasm — the `worker` crat
 ## Secrets (one-time)
 
 ```bash
-bunx wrangler secret put GROQ_API_KEY
+bunx wrangler secret put LLM_API_KEY
 bunx wrangler secret put ELEVENLABS_API_KEY
 bunx wrangler secret put ELEVENLABS_VOICE_ID   # optional
+# Optional: override the default LLM endpoint/model from Cerebras + Qwen 3 235B
+# bunx wrangler secret put LLM_BASE_URL
+# bunx wrangler secret put LLM_MODEL
 ```
 
 ## Deploy

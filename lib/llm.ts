@@ -1,24 +1,37 @@
 import "server-only";
-import Groq from "groq-sdk";
+import OpenAI from "openai";
 import type { Claim, ClaimField, NegotiateReply, Passport, Secret, Turn } from "./types";
 import { applyServerGate } from "./gate";
 
 export { applyServerGate };
 
-export const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+/**
+ * LLM provider — defaults to Cerebras Inference with Qwen 3 235B, the most
+ * generous free-tier OpenAI-compatible endpoint currently available (1M TPD,
+ * 60K TPM, 30 RPM). Any OpenAI-compatible provider works: set LLM_BASE_URL
+ * and LLM_MODEL to swap. Groq, OpenRouter, etc. all plug in with zero code
+ * changes.
+ *
+ * Defaults (2026-04-24):
+ *   LLM_BASE_URL = https://api.cerebras.ai/v1
+ *   LLM_MODEL    = qwen-3-235b-a22b-instruct-2507
+ *
+ * To switch back to Groq:
+ *   LLM_BASE_URL=https://api.groq.com/openai/v1
+ *   LLM_MODEL=meta-llama/llama-4-scout-17b-16e-instruct
+ *   LLM_API_KEY=<groq key>
+ */
+const LLM_BASE_URL = process.env.LLM_BASE_URL ?? "https://api.cerebras.ai/v1";
+const LLM_MODEL = process.env.LLM_MODEL ?? "qwen-3-235b-a22b-instruct-2507";
 
-// Groq model — configurable via env. Defaults to Llama 4 Scout 17B MoE
-// because it's the most generous on the free tier:
-//   - 30K TPM (5x the 6K ceiling on 8B / 70B)
-//   - 500K TPD (same as 8B, 5x the 70B cap)
-//   - Newer architecture + more params than Llama 3.1 8B (better Viktor
-//     quality — he's a character, bigger helps)
-//
-// Sources: console.groq.com/docs/rate-limits (verified 2026-04-24).
-// Overrides: set GROQ_MODEL=llama-3.3-70b-versatile for max character fidelity
-// (100K TPD), or GROQ_MODEL=qwen/qwen3-32b for big-model dialogue on 6K TPM.
-const GROQ_MODEL =
-  process.env.GROQ_MODEL ?? "meta-llama/llama-4-scout-17b-16e-instruct";
+// The OpenAI SDK throws at construction time when apiKey is undefined,
+// which breaks Next.js's build-time route data collection. Fall back to a
+// placeholder so construction always succeeds; calls will 401 at runtime
+// if the key is actually missing — same UX as the error banner catches.
+export const llm = new OpenAI({
+  apiKey: process.env.LLM_API_KEY ?? "missing-llm-api-key",
+  baseURL: LLM_BASE_URL,
+});
 
 const SECRET_FLAVOR: Record<Secret, string> = {
   contraband: "they carry undeclared valuables hidden in their luggage",
@@ -90,7 +103,7 @@ export async function negotiate(args: {
   const priorPlayerTurns = args.history.filter((h) => h.role === "player").length;
   const exchange = priorPlayerTurns + 1;
 
-  const messages: Groq.Chat.Completions.ChatCompletionMessageParam[] = [
+  const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     {
       role: "system",
       content: system(
@@ -109,8 +122,8 @@ export async function negotiate(args: {
     { role: "user", content: args.playerInput.slice(0, 180) },
   ];
 
-  const res = await groq.chat.completions.create({
-    model: GROQ_MODEL,
+  const res = await llm.chat.completions.create({
+    model: LLM_MODEL,
     messages,
     temperature: 0.85,
     // Reply is capped at 220 chars = ~60 tokens output. 180 is comfortable
@@ -141,8 +154,8 @@ export async function negotiate(args: {
   });
 
   const call = res.choices[0]?.message.tool_calls?.[0];
-  if (!call || call.function.name !== "respond") {
-    throw new Error("Groq did not return the respond tool call");
+  if (!call || call.type !== "function" || call.function.name !== "respond") {
+    throw new Error("LLM did not return the respond tool call");
   }
   const parsed = JSON.parse(call.function.arguments) as NegotiateReply;
   parsed.reply = parsed.reply.slice(0, 220);
@@ -151,7 +164,7 @@ export async function negotiate(args: {
 }
 
 /**
- * Extract structured claims from a single player turn. Runs a cheap, fast Groq
+ * Extract structured claims from a single player turn. Runs a cheap, fast LLM
  * call with temperature 0 and a tiny schema. Returns [] on any failure so that
  * a broken extraction never breaks the main reply path.
  *
@@ -167,8 +180,8 @@ export async function extractClaims(playerInput: string): Promise<Claim[]> {
   const validFields: ClaimField[] = ["name", "purpose", "origin", "relation"];
 
   try {
-    const res = await groq.chat.completions.create({
-      model: GROQ_MODEL,
+    const res = await llm.chat.completions.create({
+      model: LLM_MODEL,
       temperature: 0,
       max_tokens: 120,
       messages: [
@@ -209,7 +222,7 @@ export async function extractClaims(playerInput: string): Promise<Claim[]> {
     });
 
     const call = res.choices[0]?.message.tool_calls?.[0];
-    if (!call || call.function.name !== "extract") return [];
+    if (!call || call.type !== "function" || call.function.name !== "extract") return [];
     const parsed = JSON.parse(call.function.arguments) as { claims?: Claim[] };
     if (!Array.isArray(parsed.claims)) return [];
     return parsed.claims

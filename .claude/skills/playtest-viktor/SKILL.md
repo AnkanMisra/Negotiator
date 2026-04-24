@@ -32,7 +32,7 @@ If emotional wins 3/3 in turn 1, `end=pass` is firing before the 3-exchange gate
 1. **Preflight.**
    - Confirm the backend URL. Default: `http://localhost:3000/api/negotiate` (TS dev route). After R5, it's `http://localhost:8787/negotiate` (local Worker) or the deployed Worker URL. Respect `BACKEND_URL` env var if set.
    - Hit `curl -sf ${BACKEND_URL} >/dev/null` (or the origin) to confirm it's up.
-   - Confirm `GROQ_API_KEY` is present — without it the endpoint returns a `fallback: true` reply and results are meaningless. For the TS route: `grep -q '^GROQ_API_KEY=.\+' .env.local`. For the Worker: `bunx wrangler secret list`.
+   - Confirm `LLM_API_KEY` is present — without it the endpoint returns a `fallback: true` reply and results are meaningless. For the TS route: `grep -q '^LLM_API_KEY=.\+' .env.local`. For the Worker: `bunx wrangler secret list`.
 
 2. **Archetypes** — five canonical player styles, three turns each:
 

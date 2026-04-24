@@ -52,7 +52,7 @@ flowchart LR
 | Cold start (prod) | **~0 ms** (Cloudflare V8 isolates) |
 | Hosting cost | **$0/month** (Vercel + CF Workers free tiers) |
 | Deploy commands | **2** (`wrangler deploy` + `vercel --prod`) |
-| LLM | Groq `llama-3.3-70b-versatile` (free, ~300 ms) |
+| LLM | Cerebras `qwen-3-235b-a22b-instruct-2507` (free 1M TPD, ~450 tok/s) · any OpenAI-compatible endpoint via `LLM_BASE_URL` |
 | TTS | ElevenLabs `eleven_flash_v2_5` streaming |
 | Music | Kevin MacLeod, "Ossuary 5 - Rest" (CC BY 3.0) |
 | Player input cap | **180** chars · Guard reply cap **220** chars |
@@ -73,7 +73,7 @@ sequenceDiagram
     participant H as useGuardVoice
     participant M as useBackgroundMusic
     participant S as /api/negotiate
-    participant G as Groq
+    participant G as LLM (Cerebras/Qwen3)
     participant V as /api/voice
     participant EL as ElevenLabs
 
@@ -162,7 +162,7 @@ bun install
 # 2. secrets
 cp .env.example .env.local
 #   then fill in:
-#     GROQ_API_KEY        (free at console.groq.com)
+#     LLM_API_KEY         (free at cloud.cerebras.ai — 1M tokens/day)
 #     ELEVENLABS_API_KEY  (paid plan; optional — the game degrades gracefully without)
 
 # 3. run
@@ -235,7 +235,7 @@ Full deploy walkthrough: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 │   ├── skills/                    /playtest-viktor, /voice-ab, /new-scenario
 │   └── settings.local.json
 ├── scripts/
-│   └── playtest.ts                Empirical calibration against live Groq
+│   └── playtest.ts                Empirical calibration against the live LLM
 ├── session.md                     Session handoff doc for next agent
 ├── CLAUDE.md                      Agent-facing conventions + non-negotiables
 ├── AGENTS.md                      Next.js 16 breaking-change warnings
@@ -337,7 +337,7 @@ flowchart LR
 ## Credits
 
 - **Voice** — [ElevenLabs](https://elevenlabs.io) Flash v2.5 streaming TTS
-- **LLM** — [Groq](https://groq.com) (Llama 3.3 70B Versatile)
+- **LLM** — [Cerebras Inference](https://cerebras.ai) running [Qwen 3 235B](https://huggingface.co/Qwen/Qwen3-235B-A22B-Instruct-2507) (OpenAI-compatible; swap via `LLM_BASE_URL`)
 - **Music** — "Ossuary 5 - Rest" by [Kevin MacLeod](https://incompetech.com) · [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)
 - **Built in** — [Zed](https://zed.dev)
 - **Frontend** — [Next.js](https://nextjs.org) 16 on [Vercel](https://vercel.com)
