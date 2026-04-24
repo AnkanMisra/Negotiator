@@ -2,6 +2,7 @@
 
 > Midnight. Rainy border checkpoint. An LLM-driven guard reads your passport, remembers your lies, and decides if you cross. Every reply is streamed live as AI voice.
 
+[![CI](https://github.com/AnkanMisra/Negotiator/actions/workflows/ci.yml/badge.svg)](https://github.com/AnkanMisra/Negotiator/actions/workflows/ci.yml)
 ![tests](https://img.shields.io/badge/tests-56%20passing-brightgreen)
 ![ts](https://img.shields.io/badge/typescript-strict-blue)
 ![rust](https://img.shields.io/badge/rust-1.95-orange)

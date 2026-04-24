@@ -80,7 +80,10 @@ mod tests {
     #[test]
     fn mood_serializes_lowercase() {
         assert_eq!(serde_json::to_string(&Mood::Calm).unwrap(), "\"calm\"");
-        assert_eq!(serde_json::to_string(&Mood::Suspicious).unwrap(), "\"suspicious\"");
+        assert_eq!(
+            serde_json::to_string(&Mood::Suspicious).unwrap(),
+            "\"suspicious\""
+        );
         assert_eq!(serde_json::to_string(&Mood::Angry).unwrap(), "\"angry\"");
         assert_eq!(serde_json::to_string(&Mood::Amused).unwrap(), "\"amused\"");
     }
@@ -97,9 +100,18 @@ mod tests {
 
     #[test]
     fn secret_uses_snake_case_matching_ts() {
-        assert_eq!(serde_json::to_string(&Secret::Contraband).unwrap(), "\"contraband\"");
-        assert_eq!(serde_json::to_string(&Secret::FakePassport).unwrap(), "\"fake_passport\"");
-        assert_eq!(serde_json::to_string(&Secret::Fugitive).unwrap(), "\"fugitive\"");
+        assert_eq!(
+            serde_json::to_string(&Secret::Contraband).unwrap(),
+            "\"contraband\""
+        );
+        assert_eq!(
+            serde_json::to_string(&Secret::FakePassport).unwrap(),
+            "\"fake_passport\""
+        );
+        assert_eq!(
+            serde_json::to_string(&Secret::Fugitive).unwrap(),
+            "\"fugitive\""
+        );
     }
 
     #[test]
@@ -124,7 +136,10 @@ mod tests {
     #[test]
     fn end_kind_lowercase() {
         assert_eq!(serde_json::to_string(&EndKind::Pass).unwrap(), "\"pass\"");
-        assert_eq!(serde_json::to_string(&EndKind::Arrest).unwrap(), "\"arrest\"");
+        assert_eq!(
+            serde_json::to_string(&EndKind::Arrest).unwrap(),
+            "\"arrest\""
+        );
     }
 
     // NegotiateReply — TS uses camelCase: trustDelta, suspicionDelta, voiceStyle.
@@ -141,9 +156,18 @@ mod tests {
             fallback: false,
         };
         let v = serde_json::to_value(&r).unwrap();
-        assert!(v.get("trustDelta").is_some(), "expected camelCase trustDelta");
-        assert!(v.get("suspicionDelta").is_some(), "expected camelCase suspicionDelta");
-        assert!(v.get("voiceStyle").is_some(), "expected camelCase voiceStyle");
+        assert!(
+            v.get("trustDelta").is_some(),
+            "expected camelCase trustDelta"
+        );
+        assert!(
+            v.get("suspicionDelta").is_some(),
+            "expected camelCase suspicionDelta"
+        );
+        assert!(
+            v.get("voiceStyle").is_some(),
+            "expected camelCase voiceStyle"
+        );
         assert!(v.get("trust_delta").is_none(), "should not emit snake_case");
         assert_eq!(v["trustDelta"], 5);
         assert_eq!(v["suspicionDelta"], -3);
@@ -162,7 +186,10 @@ mod tests {
             fallback: false,
         };
         let v = serde_json::to_value(&r).unwrap();
-        assert!(v.get("end").is_none(), "end field must be omitted when None");
+        assert!(
+            v.get("end").is_none(),
+            "end field must be omitted when None"
+        );
     }
 
     #[test]
@@ -177,7 +204,10 @@ mod tests {
             fallback: false,
         };
         let v = serde_json::to_value(&r).unwrap();
-        assert!(v.get("fallback").is_none(), "fallback=false must be omitted");
+        assert!(
+            v.get("fallback").is_none(),
+            "fallback=false must be omitted"
+        );
     }
 
     #[test]
@@ -268,7 +298,11 @@ mod tests {
 
     #[test]
     fn turn_omits_mood_when_none() {
-        let t = Turn { role: Role::Player, text: "hi".into(), mood: None };
+        let t = Turn {
+            role: Role::Player,
+            text: "hi".into(),
+            mood: None,
+        };
         let v = serde_json::to_value(&t).unwrap();
         assert!(v.get("mood").is_none());
         assert_eq!(v["role"], "player");
