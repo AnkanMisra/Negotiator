@@ -26,6 +26,7 @@ export default function Home() {
   const { speak, amplitude } = useGuardVoice();
   const music = useBackgroundMusic(MUSIC_SRC);
   const [started, setStarted] = useState(false);
+  const [rateLimitMsg, setRateLimitMsg] = useState<string | null>(null);
 
   const opening = OPENINGS[state.secret];
 
@@ -83,9 +84,21 @@ export default function Home() {
       // cleanly and let the player retry.
       if (!res.ok) {
         console.warn(`negotiate returned ${res.status}`);
+        if (res.status === 429) {
+          const retryAfter = res.headers.get("retry-after");
+          const secs = retryAfter ? parseInt(retryAfter, 10) : 0;
+          setRateLimitMsg(
+            secs > 0
+              ? `Groq rate limit hit. Retry in ~${secs}s.`
+              : "Groq rate limit hit. Try again in a moment.",
+          );
+          setTimeout(() => setRateLimitMsg(null), 6000);
+        }
         dispatch({ type: "SPEAKING_END" });
         return;
       }
+      // Clear any lingering rate-limit banner on a successful turn.
+      if (rateLimitMsg) setRateLimitMsg(null);
 
       const data = (await res.json()) as Partial<NegotiateReply>;
 
@@ -167,6 +180,15 @@ export default function Home() {
             <MusicToggle muted={music.muted} onToggle={music.toggleMute} />
           </div>
         </header>
+
+        {rateLimitMsg && (
+          <div
+            role="alert"
+            className="flex-shrink-0 border border-amber-700/50 bg-amber-950/40 px-3 py-1.5 text-[11px] uppercase tracking-[0.2em] text-amber-200"
+          >
+            {rateLimitMsg}
+          </div>
+        )}
 
         <section className="flex-shrink-0 flex flex-col items-center">
           <GuardPortrait

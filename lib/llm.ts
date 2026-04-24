@@ -7,6 +7,12 @@ export { applyServerGate };
 
 export const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+// Groq model — configurable via env. Defaults to the 8b model because it has
+// 5x the daily token budget (500k TPD vs 100k TPD for 70b) and is ~2x faster,
+// and quality is plenty good for Viktor's short tight dialogue. Override to
+// `llama-3.3-70b-versatile` if you want higher character fidelity.
+const GROQ_MODEL = process.env.GROQ_MODEL ?? "llama-3.1-8b-instant";
+
 const SECRET_FLAVOR: Record<Secret, string> = {
   contraband: "they carry undeclared valuables hidden in their luggage",
   fake_passport: "their passport is forged",
@@ -97,10 +103,12 @@ export async function negotiate(args: {
   ];
 
   const res = await groq.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
+    model: GROQ_MODEL,
     messages,
     temperature: 0.85,
-    max_tokens: 250,
+    // Reply is capped at 220 chars = ~60 tokens output. 180 is comfortable
+    // headroom that still saves ~70 tokens/turn vs the old 250.
+    max_tokens: 180,
     tools: [
       {
         type: "function",
@@ -153,7 +161,7 @@ export async function extractClaims(playerInput: string): Promise<Claim[]> {
 
   try {
     const res = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: GROQ_MODEL,
       temperature: 0,
       max_tokens: 120,
       messages: [
