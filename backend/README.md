@@ -4,7 +4,7 @@ Rust backend for The Negotiator, running on Cloudflare Workers via [`workers-rs`
 
 ## Status
 
-**R1 scaffold.** Routes defined, handlers return 501. Real implementations come in R2 (`llm.rs`, Groq) and R3 (`tts.rs`, ElevenLabs).
+**R1 scaffold.** Routes defined, handlers return 501. Real implementations come in R2 (`llm.rs`, OpenAI-compatible LLM — Cerebras default) and R3 (`tts.rs`, ElevenLabs).
 
 ## Develop
 

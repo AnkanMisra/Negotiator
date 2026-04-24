@@ -206,7 +206,7 @@ Full deploy walkthrough: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 │   ├── gameState.ts               Pure reducer + mergeClaims (tested)
 │   ├── gameState.test.ts          26 tests: reducer + passport + claims
 │   ├── gate.ts                    Pure applyServerGate (tested)
-│   ├── llm.ts                     Groq client + Viktor prompt + extractClaims (server-only)
+│   ├── llm.ts                     OpenAI-compatible LLM client (Cerebras default) + Viktor prompt + extractClaims (server-only)
 │   ├── llm.test.ts                11 tests: applyServerGate
 │   ├── elevenlabs.ts              Voice settings per mood (server-only)
 │   ├── audio.ts                   useGuardVoice: streaming + amplitude RAF + fallback

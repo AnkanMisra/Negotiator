@@ -5,7 +5,7 @@
 ## TL;DR in 5 lines
 
 - **Hackathon:** [hacks.elevenlabs.io/hackathons/5](https://hacks.elevenlabs.io/hackathons/5). Zed × ElevenLabs. **Deadline: ~6 days from 2026-04-24.**
-- **What we're shipping:** *The Negotiator* — one-screen narrative game. Player types at border guard Viktor Marek; Groq shapes his reply; a second Groq call extracts structured claims from the input; Viktor's prompt carries both the passport (ground truth) and the running claim list so he can call out contradictions by name; ElevenLabs streams the voice.
+- **What we're shipping:** *The Negotiator* — one-screen narrative game. Player types at border guard Viktor Marek; an OpenAI-compatible LLM (Cerebras + Qwen 3 235B by default) shapes his reply; a second LLM call extracts structured claims from the input; Viktor's prompt carries both the passport (ground truth) and the running claim list so he can call out contradictions by name; ElevenLabs streams the voice.
 - **The differentiator:** consistency-under-pressure gameplay. The passport + claim-memory system is what lifts this above every other ElevenLabs submission. Papers, Please insight: *interrogation is compelling when you can get caught in a lie*.
 - **Judging reality:** the hackathon guide says *spend half your time on the video, not the code*. Video ≈ 50% of score. +50 per social post × 4 platforms = +200 bonus. **Ship the video, not a Rust port.**
 - **Strategic pivot (still in force):** Rust migration (R2-R7) is **DEFERRED until after submission**. TypeScript backend routes (`app/api/*`) ship live.
@@ -48,7 +48,7 @@
 - `/api/negotiate` ([app/api/negotiate/route.ts](app/api/negotiate/route.ts)) — runs `extractClaims()` + `negotiate()` **concurrently** via `Promise.all`, returns `NegotiateReply + updatedClaims`. Error envelopes on 429/4xx/5xx. Fallback payload on catastrophic LLM errors.
 - `/api/voice` ([app/api/voice/route.ts](app/api/voice/route.ts)) — ElevenLabs Flash v2.5 streaming passthrough.
 - **Viktor prompt** ([lib/llm.ts](lib/llm.ts)): `GROUND TRUTH` block (passport name/origin/purpose) + `PLAYER CLAIMS SO FAR` block (from reducer) + `INTERROGATION RULES` block (name contradictions specifically, never invent). Strict `end="pass" FORBIDDEN unless` language, `"none"` sentinel.
-- **`extractClaims`** (same file): cheap Groq call, temp 0, tool-forced `{claims: [{field, value}]}`, max 120 tokens. Skips extraction for short inputs or obvious questions.
+- **`extractClaims`** (same file): cheap LLM call, temp 0, tool-forced `{claims: [{field, value}]}`, max 120 tokens. Skips extraction for short inputs or obvious questions.
 - **Server-side gate** ([lib/gate.ts](lib/gate.ts)): `applyServerGate` — strips `end=pass` unless trust+Δ≥80 ∧ exchange≥3; strips `end=arrest` unless suspicion+Δ≥100. LLM compliance not required.
 - **ElevenLabs voice settings per mood** ([lib/elevenlabs.ts](lib/elevenlabs.ts)): calm/suspicious/angry/amused maps.
 

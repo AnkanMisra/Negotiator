@@ -188,7 +188,7 @@ backend/
 └─ src/
    ├─ lib.rs                     # #[event(fetch)] + Router
    ├─ handlers.rs                # /negotiate, /voice — 501 stubs (real at R4)
-   ├─ llm.rs                     # TO ADD at R2 — Viktor prompt + Groq client + tool schema + extractClaims
+   ├─ llm.rs                     # TO ADD at R2 — Viktor prompt + OpenAI-compatible LLM client (Cerebras default) + tool schema + extractClaims
    ├─ tts.rs                     # TO ADD at R3 — ElevenLabs client + mood→voice settings
    ├─ types.rs                   # Mood, Secret, Turn, Passport, Claim, NegotiateReply + 17 tests
    └─ error.rs                   # thiserror enum + Into<Response>
@@ -288,7 +288,7 @@ Project-local skills in `.claude/skills/`, invokable as `/<name>`:
 - Do **not** add Docker or multi-stage builds. There are no containers in this project.
 - Do **not** add `ts-rs`, `governor`, `moka`, `tower-http` middleware, or cargo workspaces unless explicitly asked. They are cut.
 - Do **not** remove or weaken the passport / claim-memory system — it's the gameplay differentiator.
-- Do **not** mock Groq or ElevenLabs in tests that actually run them. Use real integration against a running Worker / dev server.
+- Do **not** mock the LLM or ElevenLabs in tests that actually run them. Use real integration against a running Worker / dev server.
 - Do **not** edit `app/api/*` routes after R6 has happened — they should be deleted.
 - Do **not** dispatch `GUARD_REPLY` without validating the payload shape — NaN cascades through the entire UI.
 - Do **not** throw from `useGuardVoice.speak()` or `useBackgroundMusic.start()` — callers expect graceful resolution.

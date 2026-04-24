@@ -18,7 +18,7 @@ flowchart TB
     end
 
     DEV -->|vercel --prod| FE
-    FE -->|HTTPS| GROQ[(Groq API)]
+    FE -->|HTTPS| LLM[(LLM API<br/>Cerebras default)]
     FE -->|HTTPS stream| EL[(ElevenLabs API)]
     CLIENT[Browser] -->|HTTPS| FE
 
@@ -47,7 +47,7 @@ flowchart TB
     DEV -->|wrangler deploy| BE
 
     FE -->|NEXT_PUBLIC_API_URL<br/>HTTPS fetch| BE
-    BE -->|HTTPS| GROQ[(Groq API)]
+    BE -->|HTTPS| LLM[(LLM API<br/>Cerebras default)]
     BE -->|HTTPS stream| EL[(ElevenLabs API)]
 
     style vercel fill:#111,stroke:#000,color:#fff
@@ -59,7 +59,7 @@ flowchart TB
 ```
 Vercel (frontend + TS API routes) : $0/month
 Cloudflare Workers (future)        : $0/month (100k req/day free tier)
-Groq                               : $0 (free tier, 12k TPM)
+LLM (Cerebras default)             : $0 (free tier, 60K TPM / 1M TPD)
 ElevenLabs                         : user's existing paid plan
 DNS / domain                       : $0 (*.vercel.app + *.workers.dev)
 Music asset                        : $0 (CC BY 3.0, Kevin MacLeod)

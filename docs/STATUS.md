@@ -95,7 +95,7 @@ Gameplay differentiator — shipped end-to-end.
 | ID | Scope | Status | Notes |
 |---|---|---|---|
 | **P1** | Passport UI | ✅ done | `components/PassportCard.tsx` — aged paper, stamped purpose, MRZ line, photo silhouette. Generator in `lib/passport.ts` (Slavic name + origin pools, secret-biased purpose). Stored on state.passport. |
-| **P2** | Claim extraction pipeline | ✅ done | `extractClaims(text)` in `lib/llm.ts` — cheap Groq call, temp 0, tool-forced `{claims: [{field, value}]}`. `/api/negotiate` runs extraction + Viktor reply **concurrently** via `Promise.all`. `mergeClaims()` in `lib/gameState.ts` de-dupes by field. |
+| **P2** | Claim extraction pipeline | ✅ done | `extractClaims(text)` in `lib/llm.ts` — cheap LLM call, temp 0, tool-forced `{claims: [{field, value}]}`. `/api/negotiate` runs extraction + Viktor reply **concurrently** via `Promise.all`. `mergeClaims()` in `lib/gameState.ts` de-dupes by field. |
 | **P3** | Viktor interrogation prompt | ✅ done | New `GROUND TRUTH` + `PLAYER CLAIMS SO FAR` + `INTERROGATION RULES` blocks injected every turn. Deltas: +10-15 suspicion on passport contradiction, +15-20 on self-contradiction, +5-8 trust on match. Never invents contradictions. |
 
 ### Viktor avatar

@@ -89,8 +89,8 @@ export default function Home() {
           const secs = retryAfter ? parseInt(retryAfter, 10) : 0;
           setRateLimitMsg(
             secs > 0
-              ? `Groq rate limit hit. Retry in ~${secs}s.`
-              : "Groq rate limit hit. Try again in a moment.",
+              ? `Rate limit hit. Retry in ~${secs}s.`
+              : "Rate limit hit. Try again in a moment.",
           );
           setTimeout(() => setRateLimitMsg(null), 6000);
         }
@@ -255,7 +255,7 @@ function StartScreen({ onStart }: { onStart: () => void }) {
         </button>
         <div className="mt-10 space-y-1">
           <div className="text-[10px] text-neutral-600 tracking-widest">
-            voice: elevenlabs · wits: groq · built in zed
+            voice: elevenlabs · wits: cerebras · built in zed
           </div>
           <div className="text-[9px] text-neutral-700 tracking-wider">
             music:{" "}

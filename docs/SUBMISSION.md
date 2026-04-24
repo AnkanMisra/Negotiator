@@ -145,7 +145,7 @@ timeline
     28-40 s : Tension peak<br/>thunder SFX, lightning flash, rain intensifies<br/>Viktor's mood shifts angry<br/>voice audibly colder<br/>cheek flush on portrait
     40-48 s : Friend reaction cutaway<br/>"wait WHAT"
     48-54 s : Resolution<br/>stamp DENIED + cell door SFX<br/>OR stamp APPROVED + gate buzz<br/>end card
-    54-58 s : Zed B-roll<br/>VO: "Built in Zed. ElevenLabs voice + SFX. Groq reasoning."
+    54-58 s : Zed B-roll<br/>VO: "Built in Zed. ElevenLabs voice + SFX. Cerebras + Qwen 3 235B reasoning."
     58-60 s : Title card<br/>@zeddotdev @elevenlabsio #ElevenHacks
 ```
 
@@ -237,7 +237,7 @@ When filling out the submission on `hacks.elevenlabs.io`:
 - [ ] Cover image (1080×1920)
 - [ ] Video (uploaded or linked)
 - [ ] Description (see below)
-- [ ] Tech stack: Next.js, Groq, ElevenLabs Flash v2.5 TTS + Music + SFX, Rust (scaffold), Zed
+- [ ] Tech stack: Next.js, Cerebras + Qwen 3 235B (OpenAI-compatible, swappable), ElevenLabs Flash v2.5 TTS + Music + SFX, Rust (scaffold), Zed
 
 ### Description (for the form)
 ```
@@ -245,7 +245,7 @@ The Negotiator is a one-scene narrative game. You're a traveler at a rainy midni
 
 You're given a passport — Name, Origin, Purpose. Viktor can see it too. You type; he responds. Every reply is streamed from ElevenLabs Flash v2.5, voice-tuned to his mood.
 
-What makes it a game: a second Groq call runs in parallel each turn, extracting structured claims from what you said. Viktor's system prompt carries both the passport's ground truth AND the running list of your claims. When you contradict yourself — or your papers — he doesn't guess. He calls it out: "You said Anna. Now you say Ana. Which is it?" Trust climbs when you stay consistent. Suspicion climbs when you don't. Cross at trust ≥ 80 after 3 exchanges. Fail to convince him and suspicion hits 100 — you're arrested.
+What makes it a game: a second LLM call runs in parallel each turn, extracting structured claims from what you said. Viktor's system prompt carries both the passport's ground truth AND the running list of your claims. When you contradict yourself — or your papers — he doesn't guess. He calls it out: "You said Anna. Now you say Ana. Which is it?" Trust climbs when you stay consistent. Suspicion climbs when you don't. Cross at trust ≥ 80 after 3 exchanges. Fail to convince him and suspicion hits 100 — you're arrested.
 
 Built in Zed. Cerebras Inference serving Qwen 3 235B drives Viktor's character AND the claim extractor via forced-schema tool calls (OpenAI-compatible, ~450 tokens/sec, 1M tokens/day free). ElevenLabs Flash v2.5 streams the voice; amplitude drives mouth animation in real time. Mood changes voice settings (stability, style) so he literally sounds different depending on how you're doing. Rain intensifies and lightning flashes as suspicion climbs. Background music ducks under his voice.
 
