@@ -6,10 +6,10 @@
 
 | Metric | Value |
 |---|---|
-| Phases defined | **24** (F1–F6 · P1–P3 · A1 · U1–U3 · R1–R7 · S1–S4) |
-| Phases complete | **12** (F1 · F2 · F3 · F5 · P1 · P2 · P3 · A1 · U1 · U2 · U3 · R1) |
+| Phases defined | **26** (F1–F6 · P1–P3 · A1 · U1–U3 · L1 · I1 · R1–R7 · S1–S4) |
+| Phases complete | **14** (F1 · F2 · F3 · F5 · P1 · P2 · P3 · A1 · U1 · U2 · U3 · L1 · I1 · R1) |
 | Phases remaining | **12** |
-| Weighted completion | **≈72 %** toward a shippable submission |
+| Weighted completion | **≈78 %** toward a shippable submission |
 | Source lines | **~3,300** (TS + Rust + CSS + config) |
 | Tests passing | **56** (39 TS + 17 Rust) |
 | TS assertions | **87** |
@@ -18,7 +18,7 @@
 | Cargo clippy | warnings only (dead-code on R2-pending types) |
 | Production build | ✅ |
 | Est. remaining effort | **~10** focused hours + video capture |
-| Blockers | ElevenLabs credits (for SFX pack, audio tags, A/B, gameplay takes, submission video) · Invalid API key in current `.env.local` |
+| Blockers | ElevenLabs credits (for SFX pack, audio tags, A/B, gameplay takes, submission video) · valid `LLM_API_KEY` (Cerebras free, no credit card) |
 
 ## Phase map
 
@@ -47,6 +47,14 @@ flowchart LR
         U1[U1 Viewport-lock + scroll fix ✅]:::done
         U2[U2 Input alignment + terminal prompt ✅]:::done
         U3[U3 Background music + duck ✅]:::done
+    end
+
+    subgraph LLM[LLM provider]
+        L1[L1 Cerebras + Qwen 3 235B<br/>OpenAI-compatible ✅]:::done
+    end
+
+    subgraph Infra[Infrastructure]
+        I1[I1 GitHub CI + Dependabot ✅]:::done
     end
 
     subgraph Rust[Rust migration]
@@ -111,6 +119,18 @@ Gameplay differentiator — shipped end-to-end.
 | **U1** | Viewport-lock + scroll jank fix | ✅ done | `main: h-screen overflow-hidden`, inner `h-full gap-3 py-4`. `DialogueLog` uses `containerRef.scrollTop = scrollHeight` (no `scrollIntoView` bubble). Non-log sections `flex-shrink-0`; log section has `overflow-hidden` safety. Portrait shrunk to `max-w-[220px]`, passport tightened. Single-viewport cockpit layout, also ideal for vertical video capture. |
 | **U2** | Input alignment + terminal prompt | ✅ done | `components/PlayerInput.tsx` — `items-stretch` so SEND matches textarea height exactly. `>` prompt inside textarea wrapper for terminal feel. Character counter moved below the row (no overlap with typed text), turns red past 150. Keyboard hint "Enter to send · Shift+Enter for newline". Focus ring on the wrapper via `focus-within`. |
 | **U3** | Background music + duck | ✅ done | Kevin MacLeod "Ossuary 5 - Rest" in `public/music/` (CC BY 3.0). `lib/music.ts` owns an `HTMLAudioElement(loop)`, smooth RAF volume fades (350 ms). `lib/music.ts` exposes `start/duck/restore/toggleMute`. Ducks to 0.08 when `state.status === "speaking"`, restores to 0.28 on idle. `components/MusicToggle.tsx` in header. Start requires user gesture (browser autoplay policy — wired to "Approach the Gate" click). Attribution on start screen per license. |
+
+### LLM provider
+
+| ID | Scope | Status | Notes |
+|---|---|---|---|
+| **L1** | Swap to OpenAI-compatible client (Cerebras + Qwen 3 235B by default) | ✅ done | `lib/llm.ts` uses `openai` SDK with configurable `LLM_BASE_URL` / `LLM_MODEL`. Default endpoint Cerebras (`https://api.cerebras.ai/v1`), default model `qwen-3-235b-a22b-instruct-2507` — most generous free tier in 2026 (1M TPD, 60K TPM, 30 RPM). Any OpenAI-compatible provider plugs in via env vars (Groq, OpenRouter, OpenAI, etc). Token budget cut: `max_tokens` 250→180 for Viktor reply (~70 tokens/turn savings). 429 banner in UI. Construction uses placeholder apiKey to survive Next.js build-time route data collection when env is unset. Merged via [PR #1](https://github.com/AnkanMisra/Negotiator/pull/1). |
+
+### Infrastructure
+
+| ID | Scope | Status | Notes |
+|---|---|---|---|
+| **I1** | GitHub CI + Dependabot + PR template | ✅ done | `.github/workflows/ci.yml` runs typecheck/lint/tests/build (frontend) + cargo fmt/clippy/test/wasm32 check (backend) in parallel jobs on every PR and push to main, with a `CI passed` summary job for branch protection. Concurrency cancels stale runs. `Swatinem/rust-cache@v2` + bun install cache speed reruns. `.github/dependabot.yml` runs weekly Mon 9 AM IST across npm (grouped Next/React/Tailwind/ESLint), cargo, and github-actions. PR template enforces summary/test-plan/non-negotiables checklist. Merged via [PR #2](https://github.com/AnkanMisra/Negotiator/pull/2). |
 
 ### Rust migration (deferred post-submission)
 
@@ -187,16 +207,18 @@ pie title Where the work is (updated)
     "Viewport/input polish ✅" : 3
     "Atmosphere reactivity ✅" : 3
     "Rust scaffold ✅" : 5
+    "LLM provider (Cerebras + Qwen 3 235B) ✅" : 4
+    "GitHub CI + Dependabot ✅" : 3
     "Tests + docs ✅" : 7
     "Rust real logic (R2-R6 — deferred)" : 5
     "F4/F6 small polish" : 2
     "Vercel deploy S1" : 2
-    "Gameplay video S2" : 20
+    "Gameplay video S2" : 16
     "Social + submit S3-S4" : 3
-    "Remaining calibration + buffer" : 6
+    "Remaining calibration + buffer" : 3
 ```
 
-Buckets marked ✅ are fully complete. Weighted sum ≈ **72 %** done toward a shippable submission.
+Buckets marked ✅ are fully complete. Weighted sum ≈ **78 %** done toward a shippable submission.
 
 ## Known issues
 

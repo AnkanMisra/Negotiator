@@ -75,7 +75,7 @@
 ### Documentation (updated this session)
 - [README.md](README.md), [CLAUDE.md](CLAUDE.md), [AGENTS.md](AGENTS.md)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — updated with passport/claim flow, concurrent LLM pattern, new modules (music.ts, passport.ts, two new components), constants table
-- [docs/STATUS.md](docs/STATUS.md) — 22 phases, 11 done, ≈72% weighted complete
+- [docs/STATUS.md](docs/STATUS.md) — 26 phases, 14 done, ≈78% weighted complete
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — TS-current / Rust-future paths both documented
 - [docs/TESTING.md](docs/TESTING.md) — 56 tests, new coverage areas
 - [docs/SUBMISSION.md](docs/SUBMISSION.md) — passport-first video shot list, updated description, social templates
