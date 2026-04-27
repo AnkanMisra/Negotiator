@@ -12,7 +12,7 @@ export function PassportCard({ passport }: { passport: Passport }) {
       style={{ transform: `rotate(${tilt}deg)` }}
     >
       <div
-        className="relative border border-[#6b5a3a]/60 px-3 py-2 shadow-[0_0_0_1px_rgba(0,0,0,0.5),0_6px_20px_rgba(0,0,0,0.6)]"
+        className="relative border border-[#6b5a3a]/60 px-2 py-1.5 sm:px-3 sm:py-2 shadow-[0_0_0_1px_rgba(0,0,0,0.5),0_6px_20px_rgba(0,0,0,0.6)]"
         style={{
           background:
             "linear-gradient(135deg, #d9c89a 0%, #c2ae7d 45%, #a89469 100%)",
@@ -37,10 +37,10 @@ export function PassportCard({ passport }: { passport: Passport }) {
           <span className="opacity-70">№ {String(passport.photoSeed).padStart(4, "0")}</span>
         </div>
 
-        <div className="relative mt-2 flex gap-3">
+        <div className="relative mt-1.5 sm:mt-2 flex gap-2 sm:gap-3">
           {/* photo silhouette */}
           <div
-            className="flex h-[58px] w-[46px] flex-shrink-0 items-end justify-center overflow-hidden border border-[#4a3820]/50"
+            className="flex h-[44px] w-[36px] sm:h-[58px] sm:w-[46px] flex-shrink-0 items-end justify-center overflow-hidden border border-[#4a3820]/50"
             style={{
               background: `linear-gradient(180deg, hsl(${30 + hue}, 18%, 55%), hsl(${20 + hue}, 25%, 28%))`,
             }}
@@ -66,7 +66,7 @@ export function PassportCard({ passport }: { passport: Passport }) {
         </div>
 
         {/* bottom MRZ-ish line for flavor */}
-        <div className="relative mt-3 truncate border-t border-[#4a3820]/40 pt-1 text-[9px] tracking-[0.15em] opacity-70">
+        <div className="relative mt-2 sm:mt-3 truncate border-t border-[#4a3820]/40 pt-1 text-[9px] tracking-[0.15em] opacity-70">
           {`P<ARS${passport.name.split(" ")[1]?.toUpperCase() ?? "XXXX"}<<${passport.name.split(" ")[0]?.toUpperCase() ?? "X"}<<<<<<<<`.slice(0, 44)}
         </div>
       </div>

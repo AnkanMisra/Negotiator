@@ -7,9 +7,9 @@
 | Metric | Value |
 |---|---|
 | Phases defined | **26** (F1–F6 · P1–P3 · A1 · U1–U3 · L1 · I1 · R1–R7 · S1–S4) |
-| Phases complete | **14** (F1 · F2 · F3 · F5 · P1 · P2 · P3 · A1 · U1 · U2 · U3 · L1 · I1 · R1) |
-| Phases remaining | **12** |
-| Weighted completion | **≈78 %** toward a shippable submission |
+| Phases complete | **16** (F1 · F2 · F3 · F4 · F5 · F6 · P1 · P2 · P3 · A1 · U1 · U2 · U3 · L1 · I1 · R1) |
+| Phases remaining | **10** |
+| Weighted completion | **≈80 %** toward a shippable submission |
 | Source lines | **~3,300** (TS + Rust + CSS + config) |
 | Tests passing | **56** (39 TS + 17 Rust) |
 | TS assertions | **87** |
@@ -28,9 +28,9 @@ flowchart LR
         F1[F1 Viktor gate ✅]:::done
         F2[F2 Reactive rain + lightning ✅]:::done
         F3[F3 Per-secret openings ✅]:::done
-        F4[F4 Typewriter SFX]:::todo
+        F4[F4 Typewriter SFX ✅]:::done
         F5[F5 Graceful TTS fallback ✅]:::done
-        F6[F6 Mobile layout pass]:::todo
+        F6[F6 Mobile layout pass ✅]:::done
     end
 
     subgraph Passport[Passport mechanic]
@@ -92,9 +92,9 @@ flowchart LR
 | **F1** | Viktor prompt `end=pass` gate + server-side enforcement + history/playerInput dedup | ✅ done | — | `trust+Δ ≥ 80 ∧ exchange ≥ 3` · regression-tested |
 | **F2** | Reactive rain + lightning tied to `--suspicion-level` CSS var | ✅ done | — | Heavy rain layer + 7 s lightning keyframe above suspicion ≥ 70 |
 | **F3** | Per-secret opening lines | ✅ done | — | contraband / fake_passport / fugitive each unique |
-| F4 | Typewriter keystroke SFX in `PlayerInput` | ⬜ | 15 min | Web Audio click on `onKeyDown` |
+| **F4** | Typewriter keystroke SFX in `PlayerInput` | ✅ done | — | Web Audio oscillator click on printable-char `onKeyDown`; lazy `AudioContext`; pitch-randomised; never throws |
 | **F5** | Graceful TTS fallback with read-time delay | ✅ done | — | `max(1200, 30 × text.length)` ms hold on voice 500; game fully playable without voice credits |
-| F6 | Mobile 390 px viewport pass | ⬜ | 30 min | Verify passport + portrait + meters + input all fit vertical capture |
+| **F6** | Mobile 390 px viewport pass | ✅ done | — | `h-dvh` replaces `h-screen` (iOS Safari chrome fix); portrait shrinks `max-w-[160px] sm:max-w-[220px]`; container `px-3 sm:px-5 py-2 sm:py-4 gap-2 sm:gap-3`; PassportCard compact on mobile |
 
 ### Passport + claim-memory mechanic (the headline)
 
