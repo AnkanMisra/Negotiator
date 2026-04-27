@@ -158,7 +158,7 @@ export default function Home() {
 
   return (
     <main
-      className="relative h-screen overflow-hidden"
+      className="relative h-dvh overflow-hidden"
       style={
         {
           background:
@@ -172,7 +172,7 @@ export default function Home() {
       {suspicionLevel >= 0.7 && (
         <div className="absolute inset-0 lightning-overlay pointer-events-none" aria-hidden />
       )}
-      <div className="relative z-10 max-w-2xl mx-auto px-5 py-4 flex flex-col h-full gap-3">
+      <div className="relative z-10 max-w-2xl mx-auto px-3 sm:px-5 py-2 sm:py-4 flex flex-col h-full gap-2 sm:gap-3">
         <header className="flex-shrink-0 flex items-center justify-between text-[10px] uppercase tracking-[0.35em] text-neutral-600 flicker">
           <span>— Checkpoint 7 —</span>
           <div className="flex items-center gap-3">
@@ -229,7 +229,7 @@ export default function Home() {
 
 function StartScreen({ onStart }: { onStart: () => void }) {
   return (
-    <main className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black">
+    <main className="relative min-h-dvh flex items-center justify-center overflow-hidden bg-black">
       <div className="absolute inset-0 rain-overlay pointer-events-none" aria-hidden />
       <div className="relative z-10 text-center px-6 max-w-md">
         <div className="text-[10px] tracking-[0.4em] text-neutral-500 uppercase mb-5">

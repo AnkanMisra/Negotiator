@@ -136,7 +136,7 @@ export function GuardPortrait({
       : "rgba(70, 80, 100, 0.22)";
 
   return (
-    <div className="relative w-full aspect-square max-w-[220px] mx-auto">
+    <div className="relative w-full aspect-square max-w-[160px] sm:max-w-[220px] mx-auto">
       {/* ambient mood rim-light */}
       <div
         className="absolute inset-0 transition-colors duration-700"

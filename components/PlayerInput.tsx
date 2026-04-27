@@ -1,5 +1,5 @@
 "use client";
-import { useState, KeyboardEvent } from "react";
+import { useState, KeyboardEvent, useRef, useCallback } from "react";
 
 export function PlayerInput({
   disabled,
@@ -9,6 +9,29 @@ export function PlayerInput({
   onSubmit: (text: string) => void;
 }) {
   const [value, setValue] = useState("");
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const playClick = useCallback(() => {
+    try {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContext();
+      }
+      const ctx = audioCtxRef.current;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "square";
+      // Slight pitch randomisation so repeated presses don't sound mechanical-identical
+      osc.frequency.setValueAtTime(900 + Math.random() * 300, ctx.currentTime);
+      gain.gain.setValueAtTime(0.07, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.028);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.032);
+    } catch {
+      // audio is enhancement only — never throw to caller
+    }
+  }, []);
 
   const submit = () => {
     const trimmed = value.trim();
@@ -21,6 +44,8 @@ export function PlayerInput({
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       submit();
+    } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !disabled) {
+      playClick();
     }
   };
 
