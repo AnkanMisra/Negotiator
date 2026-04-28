@@ -11,6 +11,7 @@ import { PlayerInput } from "@/components/PlayerInput";
 import { EndCard } from "@/components/EndCard";
 import { PassportCard } from "@/components/PassportCard";
 import { MusicToggle } from "@/components/MusicToggle";
+import { buildEndCaseFile } from "@/lib/endCaseFile";
 import type { NegotiateReply, Secret } from "@/lib/types";
 
 const OPENINGS: Record<Secret, string> = {
@@ -221,7 +222,11 @@ export default function Home() {
       </div>
 
       {(state.status === "won" || state.status === "lost") && (
-        <EndCard status={state.status} onReplay={replay} />
+        <EndCard
+          status={state.status}
+          caseFile={buildEndCaseFile(state)}
+          onReplay={replay}
+        />
       )}
     </main>
   );
